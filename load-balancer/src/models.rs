@@ -1,6 +1,8 @@
+use crate::contracts::server_provider::ServerProvider;
+
 #[derive(Debug)]
 pub struct Server {
-    id: usize,
+    pub(crate) id: usize,
     pub(crate) name: String,
 }
 
@@ -11,21 +13,8 @@ pub struct LoadBalancer {
 }
 
 impl LoadBalancer {
-    pub(crate) fn new() -> Self {
-        let servers: Vec<Server> = vec![
-            Server {
-                id: 0,
-                name: String::from("Serveur 0"),
-            },
-            Server {
-                id: 1,
-                name: String::from("Serveur 1"),
-            },
-            Server {
-                id: 2,
-                name: String::from("Serveur 2"),
-            },
-        ];
+    pub(crate) fn new<T: ServerProvider>(provider: &T) -> Self {
+        let servers = provider.get_servers();
         LoadBalancer {
             servers,
             current_cursor: 0,

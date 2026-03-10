@@ -1,22 +1,27 @@
 mod models;
+mod contracts;
+mod servers;
 
-use crate::models::Server;
 use models::LoadBalancer;
-use std::rc::Rc;
 use std::sync::{Arc, Mutex, mpsc};
 use std::thread;
+use crate::contracts::server_provider::ServerProvider;
+use crate::servers::mock::mock::MockServerProvider;
 
 fn main() {
-    channel();
-    mutex();
+    let provider = MockServerProvider;
+    channel(&provider);
+    mutex(&provider);
 }
 
-fn mutex() {
-    let load_balancer = Arc::new(Mutex::new(LoadBalancer::new()));
+fn mutex<S: ServerProvider>(server_provider: &S) {
+    let load_balancer = Arc::new(Mutex::new(LoadBalancer::new(server_provider)));
+
+    let mut handles = vec![];
 
     for i in 0..20 {
         let load_balancer = Arc::clone(&load_balancer);
-        thread::spawn(move || {
+        let handle = thread::spawn(move || {
             let mut locked_load_balancer = load_balancer.lock().unwrap();
             println!("MUTEX");
             match locked_load_balancer.route_request() {
@@ -24,14 +29,20 @@ fn mutex() {
                 Some(server) =>  println!("Requête n°{i} traitée par : {}", server.name)
             }
         });
+
+        handles.push(handle);
+    }
+
+    for handle in handles {
+        handle.join().unwrap();
     }
 }
 
 /**
 Using this method the requests are scoped in a channel, so it is cleaner but not very scalable, nor efficient
 */
-fn channel() {
-    let mut load_balancer = LoadBalancer::new();
+fn channel<S: ServerProvider>(server_provider: &S) {
+    let mut load_balancer = LoadBalancer::new(server_provider);
     let (transmitter, receiver) = mpsc::channel();
     for i in 0..20 {
         let copy_transmitter = transmitter.clone();
