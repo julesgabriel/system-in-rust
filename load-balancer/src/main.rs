@@ -1,5 +1,4 @@
 mod models;
-
 use models::LoadBalancer;
 
 fn main() {
