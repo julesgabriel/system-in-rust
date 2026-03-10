@@ -1,7 +1,7 @@
 #[derive(Debug)]
 pub struct Server {
     id: usize,
-    name: String,
+    pub(crate) name: String,
 }
 
 #[derive(Debug)]
