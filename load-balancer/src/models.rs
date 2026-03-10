@@ -32,10 +32,13 @@ impl LoadBalancer {
         }
     }
 
-    pub(crate) fn route_request(&mut self) -> &Server {
+    pub(crate) fn route_request(&mut self) -> Option<&Server> {
+        if(self.servers.is_empty()) {
+            return None;
+        }
         let index_to_use = self.current_cursor;
         let next_index = (self.current_cursor + 1) % self.servers.len();
         self.current_cursor = next_index;
-        &self.servers[index_to_use]
+        Some(&self.servers[index_to_use])
     }
 }
