@@ -1,12 +1,12 @@
 #[derive(Debug)]
 pub struct Server {
     id: usize,
-    pub name: String,
+    name: String,
 }
 
 #[derive(Debug)]
 pub struct LoadBalancer {
-    pub servers: Vec<Server>,
+    servers: Vec<Server>,
     current_cursor: usize,
 }
 
@@ -32,10 +32,10 @@ impl LoadBalancer {
         }
     }
 
-    pub(crate) fn route_request(&mut self) -> usize {
+    pub(crate) fn route_request(&mut self) -> &Server {
         let index_to_use = self.current_cursor;
         let next_index = (self.current_cursor + 1) % self.servers.len();
         self.current_cursor = next_index;
-        index_to_use
+        &self.servers[index_to_use]
     }
 }

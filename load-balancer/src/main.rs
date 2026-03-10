@@ -1,8 +1,6 @@
 mod models;
 
-use std::ops::Deref;
-use models::{LoadBalancer};
-
+use models::LoadBalancer;
 
 fn main() {
     let mut load_balancer = LoadBalancer::new();
@@ -10,12 +8,9 @@ fn main() {
     for i in 0..20 {
         let route_requested = load_balancer.route_request();
         println!(
-            "Here is my {} route_request: {:?}",
-            i,
-            route_requested
+            "The server targetted for {} the servers which name is {:?}",
+            i, route_requested
         );
-        let server_requested = &load_balancer.servers[route_requested];
-        println!("It thus targets {:?}", server_requested.name);
         println!("------------------------")
     }
 }
