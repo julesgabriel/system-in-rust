@@ -5,12 +5,13 @@ mod servers;
 use models::LoadBalancer;
 use std::sync::{Arc, Mutex, mpsc};
 use std::thread;
+use std::time::Duration;
 use crate::contracts::server_provider::ServerProvider;
 use crate::servers::mock::mock::MockServerProvider;
 
 fn main() {
     let provider = MockServerProvider;
-    channel(&provider);
+    //channel(&provider);
     mutex(&provider);
 }
 
@@ -21,7 +22,22 @@ fn mutex<S: ServerProvider>(server_provider: &S) {
 
     for i in 0..20 {
         let load_balancer = Arc::clone(&load_balancer);
+        let lb_for_health_check = Arc::clone(&load_balancer);
+        thread::spawn(move || {
+            loop { // Une boucle infinie pour vérifier en continu
+                thread::sleep(Duration::from_secs(1));
+
+                // On prend le verrou, on check, et on le relâche immédiatement
+                // à la fin de cette itération (quand locked_lb sort de portée)
+                let mut locked_lb = lb_for_health_check.lock().unwrap();
+                locked_lb.check_health();
+                println!("--- [Health Check] Mise à jour des serveurs effectuée ---");
+            }
+        });
+
+
         let handle = thread::spawn(move || {
+            thread::sleep(Duration::from_millis(200 * i as u64));
             let mut locked_load_balancer = load_balancer.lock().unwrap();
             println!("MUTEX");
             match locked_load_balancer.route_request() {
