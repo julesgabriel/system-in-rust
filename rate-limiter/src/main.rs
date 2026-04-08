@@ -74,13 +74,28 @@ fn complex_rate_limiter() {
         ),
     ]));
 
-    let interval_between_request_in_millis = 10;
 
     for i in 0..101 {
         let interval = Duration::from_millis(10);
         thread::sleep(interval);
 
+        if i == 62 {
+            println!("\n🚀 [EVENT] Bob arrive sur le réseau ! Acquisition du verrou d'écriture (WRITE)...");
+            // On demande l'accès exclusif à la Map
+            let mut write_guard = users.write().unwrap();
+            write_guard.insert(
+                "Bob".to_string(),
+                TokenBucket {
+                    epoch: Mutex::new(Instant::now()),
+                    bucket: Arc::new(Mutex::new(10)),
+                },
+            );
+            println!("✅ ------------------------- [EVENT] Bob est enregistré. Libération du verrou.\n");
+        }
+
+
         let name = if i % 2 == 0 { "Solène" } else { "Jules" };
+
 
         if let Some(user) = users.read().unwrap().get(name) {
             // On récupère le temps écoulé
